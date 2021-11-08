@@ -1,0 +1,51 @@
+#version 450
+/* built in:
+in uvec3 gl_NumWorkGroups;
+in uvec3 gl_WorkGroupID;
+in uvec3 gl_LocalInvocationID;
+in uvec3 gl_GlobalInvocationID;
+in uint  gl_LocalInvocationIndex;
+*/
+
+#define KERNEL_SIZE 128
+
+layout(local_size_x_id = 0, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant) uniform PushStruct {
+    uint size;
+    uint kernel_size;
+} p;
+
+layout(binding = 0) buffer inBuffer {uint v[];};
+layout(binding = 1) buffer outBuffer {uint g_v[];};
+
+shared int[KERNEL_SIZE] shared_ints;
+
+void main() {
+	
+    // global IDs
+	uint gIDx = gl_GlobalInvocationID.x;
+    // local IDs
+    uint lIDx = gl_LocalInvocationID.x;
+    
+    if (gIDx >= p.size) {
+        return;
+    }
+
+    uint index = gl_WorkGroupID.x * p.kernel_size + lIDx;
+    shared_ints[lIDx] = int(v[index] + v[index + p.size]);
+
+    barrier();
+
+    for (int stride = 1; stride <= p.kernel_size / 2; stride*=2) {
+        
+        if (lIDx % (2*stride) == 0) {
+            shared_ints[lIDx] = shared_ints[lIDx] + shared_ints[lIDx + stride];
+        }
+
+        barrier();
+    }
+
+    if(lIDx == 0) g_v[gl_WorkGroupID.x] = shared_ints[0];
+
+}

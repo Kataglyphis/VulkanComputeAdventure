@@ -1,0 +1,68 @@
+#version 450
+/* built in:
+in uvec3 gl_NumWorkGroups;
+in uvec3 gl_WorkGroupID;
+in uvec3 gl_LocalInvocationID;
+in uvec3 gl_GlobalInvocationID;
+in uint  gl_LocalInvocationIndex;
+*/
+
+layout( local_size_x_id = 0) in;
+layout( local_size_y_id = 1) in;
+
+layout(binding = 0) buffer inputBuf {int v1[];};
+layout(binding = 1) buffer outBuf {int v2[];};
+
+// Push constant
+
+layout(push_constant) uniform PushStruct {
+    uint w;    // Array size
+    uint h;    // Array size
+} p;
+
+
+shared int[gl_WorkGroupSize.x*gl_WorkGroupSize.y] shared_ints;
+
+void main() {
+    // global IDs
+	uint gIDx = gl_GlobalInvocationID.x;
+    uint gIDy = gl_GlobalInvocationID.y;
+    // work group sizes
+    uint lSizeX = gl_WorkGroupSize.x;
+    uint lSizeY = gl_WorkGroupSize.y;
+    //  local IDs
+    uint lIDx = gl_LocalInvocationID.x;
+    uint lIDy = gl_LocalInvocationID.y;
+    
+    if (gIDx >= p.w || gIDy >= p.h) {
+        return;
+    }
+
+    if(!(gIDx >= p.w || gIDy>= p.h)) {
+
+        // shared_ints[lIDy * lSizeX + lIDx] = v1[gIDy * p.w + gIDx];
+        shared_ints[lIDx * lSizeY + (lSizeY - lIDy - 1)] = v1[gIDy * p.w + gIDx];
+    }
+
+    barrier();
+
+    // gIDx * p.h + (p.h - gIDy - 1)
+    uint workgroupglobalIDx = gl_WorkGroupID.x * lSizeX;
+    uint workgroupglobalIDy = gl_WorkGroupID.y * lSizeY;
+
+    //
+    uint gRotatedIDx = (gl_NumWorkGroups.y * gl_WorkGroupSize.y - 1) - (workgroupglobalIDy + (lSizeY - 1)); //
+    uint gRotatedIDy = workgroupglobalIDx;
+
+    uint index = lIDy * lSizeX + lIDx;
+
+    uint lWriteIndexY = index / lSizeY;
+    uint lWriteIndexX = index % lSizeY;
+
+    uint lReadIndexX = index % lSizeY;
+    uint lReadIndexY = index / lSizeY;
+
+    v2[(gRotatedIDy + lWriteIndexY) * p.h + (gRotatedIDx + lWriteIndexX)] = 
+                                                            shared_ints[lIDy * lSizeX + lIDx];
+
+} 

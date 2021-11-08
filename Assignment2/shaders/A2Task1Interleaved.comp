@@ -1,0 +1,28 @@
+#version 450
+/* built in:
+in uvec3 gl_NumWorkGroups;
+in uvec3 gl_WorkGroupID;
+in uvec3 gl_LocalInvocationID;
+in uvec3 gl_GlobalInvocationID;
+in uint  gl_LocalInvocationIndex;
+*/
+layout(local_size_x_id = 0, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant) uniform PushStruct {
+    uint size;
+    uint stride;
+} p;
+
+layout(binding = 0) buffer inoutBuffer {uint v[];};
+
+void main() {
+
+    uint lIIDx = gl_LocalInvocationID.x;
+    uint gIDx = gl_GlobalInvocationID.x;
+
+    if(gl_GlobalInvocationID.x >= p.size) return;
+
+    uint offset = gIDx + gIDx * (2 * p.stride - 1);
+    v[offset] = v[offset] + v[offset + p.stride];
+
+}

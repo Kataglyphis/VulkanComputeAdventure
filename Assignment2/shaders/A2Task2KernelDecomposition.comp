@@ -1,0 +1,138 @@
+#version 450
+/* built in:
+in uvec3 gl_NumWorkGroups;
+in uvec3 gl_WorkGroupID;
+in uvec3 gl_LocalInvocationID;
+in uvec3 gl_GlobalInvocationID;
+in uint  gl_LocalInvocationIndex;
+*/
+
+//#define UNROLL
+// TO DO: tailor to your architecture (these parameter work for virtually all NVIDIA GPUs)
+#define NUM_BANKS			32
+#define NUM_BANKS_LOG		5
+#define SIMD_GROUP_SIZE		32
+#define KERNEL_SIZE			128
+
+layout(local_size_x_id = 0, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant) uniform PushStruct {
+    uint size;
+    uint kernel_size;
+} p;
+
+layout(binding = 0) buffer inoutBuffer {uint array[];};
+layout(binding = 1) buffer offsetBuffer {uint higherLevelArray[];};
+
+#define PADDING (2*KERNEL_SIZE) / NUM_BANKS
+// Shared variables
+shared int[2 * KERNEL_SIZE + PADDING] shared_ints;
+
+// Bank conflicts
+#define AVOID_BANK_CONFLICTS
+#ifdef AVOID_BANK_CONFLICTS
+#define OFFSET(A) (A + (int(A)/int(NUM_BANKS)))
+#else
+#define OFFSET(A) (A)
+#endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void main() 
+{
+	
+    // global IDs
+	uint gIDx = gl_GlobalInvocationID.x;
+    // local IDs
+    uint lIDx = gl_LocalInvocationID.x;
+    
+    if (gIDx >= p.size) {
+        return;
+    }
+
+    // then we are not allowed to instantly load 2*N elements!!
+    bool only_local = (p.kernel_size <= KERNEL_SIZE);
+
+    if(only_local) {
+
+        // no ptimization here; strictly load the data in 
+        shared_ints[OFFSET(lIDx)] = int(array[gIDx]);
+    
+    } else {
+
+        // we are loading 2*KERNEL_SIZE elements in total
+        // they need to conserve the order; load very 2nd element and its neighbor
+        uint index = 2*lIDx;
+        uint offset = gl_WorkGroupID.x * 2 * p.kernel_size;
+        shared_ints[index] = int(array[index + offset]);
+        shared_ints[index + 1] = int(array[index + offset + 1]);
+    
+    }
+
+    // make sure everything is correctly loaded in before reading 
+    barrier();
+
+    // now up-sweep
+    // stride <= 2*(KERNEL_SIZE/2) = KERNEL_SIZE ...
+    int limit = KERNEL_SIZE;
+    if(only_local) limit = int(p.kernel_size / 2); // when local we deal with half the kernel_size numbers
+    for (int stride = 1; stride <= limit; stride*=2) {
+        
+        if ((lIDx + 1) % (2*stride) == 0) {
+            shared_ints[OFFSET(lIDx)] = shared_ints[OFFSET(lIDx)] + shared_ints[OFFSET(lIDx - stride)];
+        }
+
+        barrier();
+    }
+
+    // write explicitly 0 into last element!
+    if(lIDx == 0) shared_ints[OFFSET(2*limit - 1)] = 0;
+
+    barrier();
+
+    // down sweep 
+    for (int stride = 2*limit; stride > 1; stride/=2) {
+        
+        bool is_element_of_current_step = ((lIDx+1) % (stride/2)) == 0;
+
+        bool is_right_child = ((lIDx+1) % (stride) == 0);
+        bool is_left_child = ((lIDx+1) % (stride) != 0);
+
+        int left_neighbor = shared_ints[OFFSET(lIDx - stride/2)];
+        int current_val = shared_ints[OFFSET(lIDx)];
+        int right_neighbor = shared_ints[OFFSET(lIDx + stride/2)];
+
+        barrier();
+
+        if(!is_right_child && is_element_of_current_step) {
+            
+            shared_ints[OFFSET(lIDx)] = right_neighbor;
+
+        }
+
+        if(is_right_child && is_element_of_current_step) {
+        
+            shared_ints[OFFSET(lIDx)] = current_val + left_neighbor;
+
+        }       
+
+        barrier();
+
+    }
+
+    // write the results back
+
+    if(only_local) {
+    
+        uint gIndex = gIDx;
+        uint lIndex = lIDx;
+        array[gIndex] += shared_ints[OFFSET(lIndex)];
+
+    } else {
+
+        uint gIndex = 2*lIDx;
+        uint offset = gl_WorkGroupID.x * 2 * p.kernel_size;
+        array[gIndex + offset] += shared_ints[lIDx];
+        array[gIndex + offset + 1] += shared_ints[lIDx+1];
+        
+    }
+}

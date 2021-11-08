@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# custom files
+Assignment1/build
+Assignment2/build
