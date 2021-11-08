@@ -109,7 +109,7 @@ plt.clf()
 # reading all infos in a order way
 fields = []
 rows = []
-vector_sizes = [12800000, 3200000, 4000000, 1000000]
+vector_sizes = [40960000, 25600000, 20480000, 12800000, 10240000]
 
 read_csv_file(filename_matrixRot, fields, rows)
 
@@ -175,16 +175,16 @@ scale_points_for_matrix_rotation_analysis(scale_naive, timing_from_different_vec
 scale_points_for_matrix_rotation_analysis(scale_optimized, opt_timing_from_different_vecsizes)
 
 # unoptimized algorithm
-plt.scatter(workgroupsize_from_different_vecsizes[0], timing_from_different_vecsizes[0] , s=scale_naive[0], c='magenta', label="12800000 (naive)") 
-plt.scatter(workgroupsize_from_different_vecsizes[1], timing_from_different_vecsizes[1], s=scale_naive[1], c='green', label="3200000 (naive)")
-plt.scatter(workgroupsize_from_different_vecsizes[2], timing_from_different_vecsizes[2], s=scale_naive[2], c='grey', label="4000000 (naive)")
-plt.scatter(workgroupsize_from_different_vecsizes[3], timing_from_different_vecsizes[3], s=scale_naive[3], c='blue', label="1000000 (naive)")
+plt.scatter(workgroupsize_from_different_vecsizes[0], timing_from_different_vecsizes[0] , s=scale_naive[0], c='magenta', label="40960000 (naive)") 
+plt.scatter(workgroupsize_from_different_vecsizes[1], timing_from_different_vecsizes[1], s=scale_naive[1], c='green', label="25600000 (naive)")
+plt.scatter(workgroupsize_from_different_vecsizes[2], timing_from_different_vecsizes[2], s=scale_naive[2], c='grey', label="20480000 (naive)")
+plt.scatter(workgroupsize_from_different_vecsizes[3], timing_from_different_vecsizes[3], s=scale_naive[3], c='blue', label="12800000 (naive)")
 
 # optimized algorithm
-plt.scatter(workgroupsize_from_different_vecsizes[0], opt_timing_from_different_vecsizes[0], s=scale_optimized[0], c='magenta', label="12800000 (optimized)", marker="^")
-plt.scatter(workgroupsize_from_different_vecsizes[1], opt_timing_from_different_vecsizes[1], s=scale_optimized[1], c='green', label="3200000 (optimized)", marker="^")
-plt.scatter(workgroupsize_from_different_vecsizes[2], opt_timing_from_different_vecsizes[2], s=scale_optimized[2], c='grey', label="4000000 (optimized)", marker="^")
-plt.scatter(workgroupsize_from_different_vecsizes[3], opt_timing_from_different_vecsizes[3], s=scale_optimized[3], c='blue', label="1000000 (optimized)", marker="^")
+plt.scatter(workgroupsize_from_different_vecsizes[0], opt_timing_from_different_vecsizes[0], s=scale_optimized[0], c='magenta', label="40960000 (optimized)", marker="^")
+plt.scatter(workgroupsize_from_different_vecsizes[1], opt_timing_from_different_vecsizes[1], s=scale_optimized[1], c='green', label="25600000 (optimized)", marker="^")
+plt.scatter(workgroupsize_from_different_vecsizes[2], opt_timing_from_different_vecsizes[2], s=scale_optimized[2], c='grey', label="20480000 (optimized)", marker="^")
+plt.scatter(workgroupsize_from_different_vecsizes[3], opt_timing_from_different_vecsizes[3], s=scale_optimized[3], c='blue', label="12800000 (optimized)", marker="^")
 
 plt.plot([], [], ' ', label="Vector sizes")
 plt.title("Matrix Rotation")
