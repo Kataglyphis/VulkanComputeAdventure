@@ -28,10 +28,12 @@ void main() {
         return;
     }
 
+    // just pass through value
     if(gIDx < p.offset){
 
         g_v[gIDx] = v[gIDx];
 
+    //add 'em up and store result 
     } else {
     
         g_v[gIDx] = v[gIDx] + v[gIDx - p.offset];

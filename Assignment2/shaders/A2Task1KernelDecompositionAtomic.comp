@@ -37,6 +37,8 @@ void main() {
 
     barrier();
 
+    // atomicAdd only functions with shared memory!
+    // when using global memory error occurs 
     if(lIDx != 0 && lIDx < p.kernel_size) {
         atomicAdd(shared_ints[0], shared_ints[lIDx]);
     }    

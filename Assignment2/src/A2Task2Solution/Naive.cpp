@@ -63,12 +63,6 @@ void A2Task2SolutioNaive::compute() {
     vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
     cb.begin(beginInfo);
-
-    // TO DO: Implement naive scan
-    // NOTE: make sure that activeBuffer points to the buffer with the final result in the end
-    // That buffer is read back for the correctness check
-    // (A2Task2SolutioNaive::result())
-    // HINT: You can alternate between the two provided descriptor sets to implement ping-pong
     
     cb.resetQueryPool(app.queryPool, 0, 2);
     cb.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, app.queryPool, 0);
@@ -80,7 +74,7 @@ void A2Task2SolutioNaive::compute() {
 
     unsigned int curr_vec_size = workSize;
     unsigned int currOffset = 1;
-
+    // log_b(a) = log(a)/log(b)
     unsigned int reduction_depth = std::ceil(log(curr_vec_size) / log(2));
 
     for (int i = 0; i < reduction_depth; i++) {

@@ -24,8 +24,9 @@ layout(push_constant) uniform PushStruct {
 layout(binding = 0) buffer inoutBuffer {uint array[];};
 layout(binding = 1) buffer offsetBuffer {uint higherLevelArray[];};
 
+// maximum number of padding we can have :)
 #define PADDING (2*KERNEL_SIZE) / NUM_BANKS
-// Shared variables
+// Shared variables, add padding for avoiding bank conflicts 
 shared int[2 * KERNEL_SIZE + PADDING] shared_ints;
 
 // Bank conflicts
@@ -71,13 +72,17 @@ void main()
     // make sure everything is correctly loaded in before reading 
     barrier();
 
-    // now up-sweep
-    // stride <= 2*(KERNEL_SIZE/2) = KERNEL_SIZE ...
+    // ### UP-SWEEP ###
+    // stride <= 2*(KERNEL_SIZE/2) hence I set limit to KERNEL_SIZE
     int limit = KERNEL_SIZE;
-    if(only_local) limit = int(p.kernel_size / 2); // when local we deal with half the kernel_size numbers
+    // when local we deal with half the kernel_size numbers for we are NOT loading 2*KERNEL_SIZE elements 
+    // as in the global step
+    if(only_local) limit = int(p.kernel_size / 2); 
     for (int stride = 1; stride <= limit; stride*=2) {
         
         if ((lIDx + 1) % (2*stride) == 0) {
+            // this looks very similar to the interleaved addressing 
+            // BUT: the neighbor element is on the LEFT (SUBTRACT stride) :) bacause we are going up and not down
             shared_ints[OFFSET(lIDx)] = shared_ints[OFFSET(lIDx)] + shared_ints[OFFSET(lIDx - stride)];
         }
 
@@ -89,7 +94,7 @@ void main()
 
     barrier();
 
-    // down sweep 
+    // ### DOWN SWEEP ### 
     for (int stride = 2*limit; stride > 1; stride/=2) {
         
         bool is_element_of_current_step = ((lIDx+1) % (stride/2)) == 0;
@@ -97,6 +102,7 @@ void main()
         bool is_right_child = ((lIDx+1) % (stride) == 0);
         bool is_left_child = ((lIDx+1) % (stride) != 0);
 
+        // for avoiding write conflicts save values before we write left and right child
         int left_neighbor = shared_ints[OFFSET(lIDx - stride/2)];
         int current_val = shared_ints[OFFSET(lIDx)];
         int right_neighbor = shared_ints[OFFSET(lIDx + stride/2)];

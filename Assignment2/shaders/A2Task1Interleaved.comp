@@ -22,7 +22,10 @@ void main() {
 
     if(gl_GlobalInvocationID.x >= p.size) return;
 
+    // selects elements which are aim of our reduction in current step
     uint offset = gIDx + gIDx * (2 * p.stride - 1);
-    v[offset] = v[offset] + v[offset + p.stride];
+    // add stride to current aim of reduction position and we have the neighbor
+    uint neighbor = v[offset + p.stride];
+    v[offset] = v[offset] + neighbor;
 
 }

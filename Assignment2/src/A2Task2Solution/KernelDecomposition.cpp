@@ -46,8 +46,6 @@ void A2Task2SolutionKernelDecomposition::prepare(const std::vector<uint> &input)
 
     fillDeviceWithStagingBuffer(app.pDevice, app.device, app.transferCommandPool, app.transferQueue, inoutBuffers[0], input);
 
-    // TO DO create additional buffers (by pushing into inoutBuffers) and descriptors (by pushing into descriptorSets)
-    // You need to create an appropriately-sized DescriptorPool first
     Cmn::createDescriptorPool(app.device, bindings, descriptorPool, 2);
     for (int i = 0; i < 1; i++)
         Cmn::allocateDescriptorSet(app.device, descriptorSets[i], descriptorPool, descriptorSetLayout);
@@ -69,7 +67,6 @@ void A2Task2SolutionKernelDecomposition::compute() {
     cb.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, app.queryPool, 1);
     cb.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout, 0U, 1U, &descriptorSets[0], 0U, nullptr);
 
-
     unsigned int curr_vec_size = workSize;
     // how often do we have to perform the group sums
     // unsigned int reduction_depth = std::ceil(log(curr_vec_size) / log(workGroupSize));
@@ -90,7 +87,8 @@ void A2Task2SolutionKernelDecomposition::compute() {
         {}
     );
 
-    curr_vec_size = current_wrk_grp_count / 2;
+     
+    //curr_vec_size = current_wrk_grp_count / 2;
 
     cb.end();
 

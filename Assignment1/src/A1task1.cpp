@@ -80,8 +80,7 @@ void A1_Task1::prepare(unsigned int size)
         vk::MemoryPropertyFlagBits::eDeviceLocal,
         "outBuffer", outBuffer.buf, outBuffer.mem);
 
-    // ### Fills inBuffer1 and inBuffer2 ###
-
+    // ### Fills inBuffer1 and inBuffer2 with default values ###
     this->defaultValues();
 
     // === prepare data ===
@@ -95,7 +94,6 @@ void A1_Task1::prepare(unsigned int size)
     // ### Create  structures ###
     // ### DescriptorSet is created but not filled yet ###
     // ### Bind buffers to descriptor set ### (calls update several times)
-
     Cmn::bindBuffers(app.device, inBuffer1.buf, task.descriptorSet, 0);
     Cmn::bindBuffers(app.device, inBuffer2.buf, task.descriptorSet, 1);
     Cmn::bindBuffers(app.device, outBuffer.buf, task.descriptorSet, 2);
@@ -105,16 +103,15 @@ void A1_Task1::prepare(unsigned int size)
 void A1_Task1::compute(uint32_t dx, uint32_t dy, uint32_t dz, std::string file)
 {
     uint32_t groupCount = (workloadSize + dx - 1) / dx; 
-    PushStruct push{ workloadSize }; // todo: fill
-    // ### Create ShaderModule ###
+    PushStruct push{ workloadSize };
  
+    // ### Create ShaderModule ###
     std::string compute = "shaders/" + file + ".comp.spv";
     vkDestroyShaderModule(app.device, task.cShader, nullptr);
     Cmn::createShader(app.device, task.cShader, compute);
+
     // ### Specialization constants
     // constantID, offset, sizeof(type)
-
-    // ### Create Pipeline ###
     std::array<vk::SpecializationMapEntry, 1> spec_entries =
         std::array<vk::SpecializationMapEntry, 1>{ { {0U, 0U, sizeof(int)}}};
 
@@ -123,6 +120,7 @@ void A1_Task1::compute(uint32_t dx, uint32_t dy, uint32_t dz, std::string file)
         CAST(spec_entries), spec_entries.data(),
         CAST(spec_values) * sizeof(int), spec_values.data());
 
+    // ### Create Pipeline ###
     app.device.destroyPipeline(task.pipeline);
     Cmn::createPipeline(app.device, task.pipeline, task.pipelineLayout, spec_info, task.cShader);
 
@@ -155,8 +153,7 @@ void A1_Task1::dispatchWork(uint32_t dx, uint32_t dy, uint32_t dz, PushStruct &p
     app.computeQueue.submit({ submit_info }, fence);
     vk::Result haveIWaited = app.device.waitForFences({ fence }, true, uint64_t(-1));
     app.device.destroyFence(fence);
-    /* Uncomment this once you've finished this function:
-    ###*/
+    
     uint64_t timestamps[2];
     vk::Result result = app.device.getQueryPoolResults(app.queryPool, 0, 2, sizeof(timestamps), &timestamps, sizeof(timestamps[0]), vk::QueryResultFlagBits::e64);
     assert(result == vk::Result::eSuccess);

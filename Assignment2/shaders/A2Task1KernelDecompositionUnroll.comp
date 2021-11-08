@@ -37,8 +37,13 @@ void main() {
 
     barrier();
     
+    // although we unroll we still need to take kernel size into account 
+    // when in last step kernel is smaller than 128 we have to adapt 
+    // steps; otherwise wild errors occur !
     int counter = int(log2(p.kernel_size));
 
+    // always prove whether we have to stop and wait for all threads 
+    // with a barrier 
     if (lIDx % 2 == 0 && counter > 0) {
             shared_ints[lIDx] = shared_ints[lIDx] + shared_ints[lIDx + 1];
     }
@@ -87,6 +92,8 @@ void main() {
 
     barrier();
 
+    // here we stop with the loop unrolling because 128 is the max. 
+    // kernel size here 
     if (lIDx % 128 == 0 && counter > 0) {
             shared_ints[lIDx] = shared_ints[lIDx] + shared_ints[lIDx + 64];
     }

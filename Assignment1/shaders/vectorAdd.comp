@@ -27,7 +27,7 @@ void main() {
 	uint gID = gl_GlobalInvocationID.x;
     
 	int v = int(v1[gID]);
-    //int v_2 = int(v1[gID]);
+    
 	if(gID > params.size) return; 
 
 	v3[gID] = int(v1[gID]) + int(v2[gID]);
