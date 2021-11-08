@@ -19,6 +19,7 @@ layout(push_constant) uniform PushStruct {
 layout(binding = 0) buffer inBuffer {uint v[];};
 layout(binding = 1) buffer outBuffer {uint g_v[];};
 
+// as many elements as threads
 shared int[KERNEL_SIZE] shared_ints;
 
 void main() {
@@ -32,6 +33,9 @@ void main() {
         return;
     }
 
+    // take into account kernel size can be smaller than 128 in last step!!
+    // therefore kernel size is given with push struct
+    // in that case kernel_size == size 
     uint index = gl_WorkGroupID.x * p.kernel_size + lIDx;
     shared_ints[lIDx] = int(v[index] + v[index + p.size]);
 

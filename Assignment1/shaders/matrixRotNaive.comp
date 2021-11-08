@@ -14,7 +14,6 @@ layout(binding = 0) buffer inputBuf {int v1[];};
 layout(binding = 1) buffer outBuf {int v2[];};
 
 // Push constant
-
 layout(push_constant) uniform PushStruct {
     uint w;    // Array size
     uint h;    // Array size
@@ -22,14 +21,16 @@ layout(push_constant) uniform PushStruct {
 
 
 void main() {
+
     //grab global ID
 	uint gIDx = gl_GlobalInvocationID.x;
     uint gIDy = gl_GlobalInvocationID.y;
+
     //make sure we don't access past the buffer size
     if (gIDx >= p.w || gIDy >= p.h) {
         return;
     }
-
+    // this is naive; strictly copy from the global memory to global memory ...
     v2[gIDx * p.h + (p.h - gIDy - 1)] = v1[gIDy * p.w + gIDx];
     // v2[gIDx * p.h + gIDy] = v1[gIDy * p.w + gIDx];
 } 

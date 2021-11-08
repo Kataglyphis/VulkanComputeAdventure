@@ -87,13 +87,8 @@ void A1_Task2::prepare(unsigned int size_w, unsigned int size_h)
 
     this->inBuffer = makeDLocalBuffer(BFlag::eTransferDst | BFlag::eStorageBuffer, workloadSize * sizeof(unsigned int), "buffer_in");
     this->outBuffer = makeDLocalBuffer(BFlag::eTransferSrc | BFlag::eStorageBuffer, workloadSize * sizeof(unsigned int), "buffer_out");
-    /*
-    Todo : create descriptorsetlayout pool set...
-    */
-
-    /*
-    TODO: create the storage input and output buffers
-    */
+    
+    // ### fill buffer with default values
     this->defaultValues();
 
     // ### Bind buffers to descriptor set ### (calls update several times)
@@ -131,8 +126,8 @@ void A1_Task2::compute(uint32_t dx, uint32_t dy, uint32_t dz, std::string file)
     vk::SpecializationInfo spec_info = vk::SpecializationInfo(
         CAST(spec_entires), spec_entires.data(),
         CAST(spec_values) * sizeof(int), spec_values.data());
-    // in case a pipeline was already created, destroy it
     
+    // in case a pipeline was already created, destroy it
     app.device.destroyPipeline(task.pipeline);
     Cmn::createPipeline(app.device, task.pipeline, task.pipelineLayout, spec_info, task.cShader);
 

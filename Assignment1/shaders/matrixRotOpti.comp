@@ -14,16 +14,16 @@ layout(binding = 0) buffer inputBuf {int v1[];};
 layout(binding = 1) buffer outBuf {int v2[];};
 
 // Push constant
-
 layout(push_constant) uniform PushStruct {
     uint w;    // Array size
     uint h;    // Array size
 } p;
 
-
+// fast and efficient local memory; hold integer for each thread
 shared int[gl_WorkGroupSize.x*gl_WorkGroupSize.y] shared_ints;
 
 void main() {
+
     // global IDs
 	uint gIDx = gl_GlobalInvocationID.x;
     uint gIDy = gl_GlobalInvocationID.y;
@@ -40,28 +40,35 @@ void main() {
 
     if(!(gIDx >= p.w || gIDy>= p.h)) {
 
-        // shared_ints[lIDy * lSizeX + lIDx] = v1[gIDy * p.w + gIDx];
+        // directly write in rotated position into local memory and read horizontally from global!
+        // therefore we can LATER read out of local memory horizontally 
         shared_ints[lIDx * lSizeY + (lSizeY - lIDy - 1)] = v1[gIDy * p.w + gIDx];
     }
 
     barrier();
 
-    // gIDx * p.h + (p.h - gIDy - 1)
     uint workgroupglobalIDx = gl_WorkGroupID.x * lSizeX;
     uint workgroupglobalIDy = gl_WorkGroupID.y * lSizeY;
 
-    //
-    uint gRotatedIDx = (gl_NumWorkGroups.y * gl_WorkGroupSize.y - 1) - (workgroupglobalIDy + (lSizeY - 1)); //
+    uint maxGlobalIDy = (gl_NumWorkGroups.y * gl_WorkGroupSize.y - 1); 
+    uint flippedLocaly = (lSizeY - 1);
+
+    // when rotated workgroupID is now at the right end of group
+    // therefore we need to flip y coordinate
+    uint gRotatedIDx = maxGlobalIDy - (workgroupglobalIDy + flippedLocaly);
     uint gRotatedIDy = workgroupglobalIDx;
 
+    // used as index; tells us WHERE we currently are 
     uint index = lIDy * lSizeX + lIDx;
 
+    // in rotated field each row has lSizeY elements 
+    // hence division lSizeY gives us Y
     uint lWriteIndexY = index / lSizeY;
+    // hence each row has lSizeY elements our new IDx is the modulo 
     uint lWriteIndexX = index % lSizeY;
 
-    uint lReadIndexX = index % lSizeY;
-    uint lReadIndexY = index / lSizeY;
-
+    //our new ID is now a sum of the rotated global group ID + local rotated id :)
+    // we can read horizontally from local memory for we have written into it in rotated coords earlier 
     v2[(gRotatedIDy + lWriteIndexY) * p.h + (gRotatedIDx + lWriteIndexX)] = 
                                                             shared_ints[lIDy * lSizeX + lIDx];
 

@@ -61,8 +61,8 @@ void A2Task1SolutionKernelDecomposition::compute()
 
     // we only need half the threads than we have entries in the vector in the beginning
     // for the first reduction
-
     unsigned int curr_vec_size = mpInput->size() / 2;
+    // log_b(a) = log(a)/log(b)
     unsigned int reduction_depth = std::ceil(log(curr_vec_size) / log(workGroupSize));
 
     for (int i = 0; i < reduction_depth; i++) {
@@ -88,6 +88,9 @@ void A2Task1SolutionKernelDecomposition::compute()
             {}
         );
 
+        // every work group reduces itself to one element
+        // hence we reduce problem per iteration by current work group count
+        // for we read in 2 elements per thread we also reduce it by factor 2
         curr_vec_size = current_wrk_grp_count / 2;
 
         // ping pong game :)
