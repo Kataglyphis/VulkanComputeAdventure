@@ -61,7 +61,7 @@ int main()
 
             };
 
-            A2Task1SolutionInterleaved interleavedSolution(app, 128);
+            /*A2Task1SolutionInterleaved interleavedSolution(app, 128);
             evaluateTask1Solution(&interleavedSolution, "Interleaved");
 
             A2Task1SolutionSequential sequentialSolution(app, 128);
@@ -74,7 +74,7 @@ int main()
             evaluateTask1Solution(&kernelDecompositionUnrollSolution, "KernelDecomposition Unroll");
 
             A2Task1SolutionKernelDecomposition kernelDecompositionAtomicSolution(app, 128, "shaders/A2Task1KernelDecompositionAtomic.comp.spv");
-            evaluateTask1Solution(&kernelDecompositionAtomicSolution, "KernelDecomposition Atomic");
+            evaluateTask1Solution(&kernelDecompositionAtomicSolution, "KernelDecomposition Atomic");*/
         }
 
         {
@@ -111,8 +111,8 @@ int main()
                 }
             };
 
-            A2Task2SolutioNaive naiveSolution(app, 128);
-            evaluateTask2Solution(&a2Task2, &naiveSolution, "Naive");
+            /*A2Task2SolutioNaive naiveSolution(app, 128);
+            evaluateTask2Solution(&a2Task2, &naiveSolution, "Naive");*/
 
             A2Task2SolutionKernelDecomposition kernelDecompositionSolutionLocal(app, sizeLocal);
             evaluateTask2Solution(&a2Task2Local, &kernelDecompositionSolutionLocal, "Kernel Decomposition Local");

@@ -63,7 +63,7 @@ int main()
 
         csv_task2.newRow() << "dx" << "dy" << "dz" << "vecsize" << "timing naive" << "timing optimized";
 
-        unsigned int num_iterations_task2 = 10;
+        unsigned int num_iterations_task2 = 20;
         std::array<unsigned int, 3> workload_sizes_w_task2 = { 6400,4000,3200 };
         std::array<unsigned int, 3> workload_sizes_h = { 6400,4000,3200 };
         std::array<unsigned int, 3> dx_s_task2 = { 32,16,8 };

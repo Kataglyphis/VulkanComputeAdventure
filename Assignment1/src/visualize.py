@@ -51,8 +51,8 @@ def scale_points_for_matrix_rotation_analysis(scale, time_vec):
 
     for i in range(len(time_vec)):
         # some scaling magic... playing with linear and scaling factor ...
-        scaling = 1.2
-        linear_offset = 6
+        scaling = 0.5
+        linear_offset = 0
         scale.append([((float(tmp[0]) + linear_offset) * scaling)**2 for tmp in time_vec[i]])
 
     return scale    
